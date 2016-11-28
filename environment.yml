@@ -1,48 +1,10 @@
 name: EvolRugAdaptLand2016
 dependencies:
-- backports=1.0
-- cycler=0.10.0
-- cython=0.24
-- decorator=4.0.9
-- get_terminal_size=1.0.0
-- ipykernel=4.3.1
-- ipython=4.2.0
-- ipython_genutils=0.1.0
-- jpeg=8d
-- jupyter_client=4.2.2
-- jupyter_core=4.1.0
-- libpng=1.6.17
-- libtiff=4.0.6
-- matplotlib=1.5.1
-- mkl=11.3.1
-- numpy=1.11.0
-- openssl=1.0.2h
-- pandas=0.18.1
-- path.py=8.2.1
-- pickleshare=0.5
-- pip=8.1.1
-- pyparsing=2.1.1
-- pyqt=4.11.4
-- python=3.5.1
-- python-dateutil=2.5.2
-- pytz=2016.3
-- pyzmq=15.2.0
-- qt=4.8.7
-- scipy=0.17.0
-- seaborn=0.7.0
-- setuptools=20.7.0
-- simplegeneric=0.8.1
-- sip=4.16.9
-- six=1.10.0
-- tk=8.5.18
-- tornado=4.3
-- traitlets=4.2.1
-- wheel=0.29.0
-- zlib=1.2.8
-- pip:
-  - backports.shutil-get-terminal-size==1.0.0
-  - ipython-genutils==0.1.0
-  - jupyter-client==4.2.2
-  - jupyter-core==4.1.0
-  - sphinx==1.3.1
-
+- ipykernel
+- matplotlib=1.5
+- numpy
+- pandas=0.18
+- pip
+- python=3.5
+- scipy
+- seaborn

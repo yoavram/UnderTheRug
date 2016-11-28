@@ -11,9 +11,8 @@ The notebook includes code to load fitness landscape data, simulate evolution on
 Install [Anaconda](https://store.continuum.io/), then create a new environment and install it as an IPython kernel (do this from inside the repo folder):
 
 ```sh
-conda create -n EvolRugAdaptLand2016 --file environment.yml
-activate EvolRugAdaptLand2016
-python -m ipykernel install --name EvolRugAdaptLand2016
+conda env create -f environment.yml
+source activate EvolRugAdaptLand2016
 ```
 
 ## Run
