@@ -1,5 +1,6 @@
 name: EvolRugAdaptLand2016
 dependencies:
+- cython
 - ipykernel
 - matplotlib=1.5
 - numpy
