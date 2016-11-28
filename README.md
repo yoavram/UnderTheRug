@@ -4,7 +4,7 @@ This repository includes Python code in the form of a Jupyter notebook that is u
 
 > Obolski, Ram & Hadany (2016) Evolution on rugged adaptive landscapes, Reports on Progress in Physics, *In preparation*.
 
-The notebook includes code to load fitness landscape data, simulate evolution on it using a Wright-Fisher model, and visualize the results of simulations.
+The notebook includes code to load fitness landscape data, simulate evolution on the landscape using a Wright-Fisher model, and visualize the results of simulations.
 
 ## Install
 
@@ -25,6 +25,4 @@ jupyter notebook
 
 ## License
 
-CC-BY-SA 3
-
-
+<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
