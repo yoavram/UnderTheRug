@@ -1,4 +1,5 @@
 from datetime import datetime 
+import gzip
 import json
 import click
 import numpy as np
@@ -60,34 +61,36 @@ def simulation(N, s, H, u):
     Tfe = len(n) - Tw # fixation / extinction time
     return Tw, Tfe, bool(n[-1][-1] > 0), np.array(n)
 
+
 @click.command()
 @click.option('--N', default=1000, type=int, help='Population size')
 @click.option('--s', default=0.1, type=float, help='Selection coefficient')
 @click.option('--H', default=2, type=float, help='Advantage of double mutant')
 @click.option('--u', default=1e-5, type=float, help='Mutation rate')
-@click.argument('output', default=datetime.now().strftime(time_format)+'.json', type=click.File('wt'))
-def main(n, s, h, u, output):
+def main(n, s, h, u):
     N = n
     H = h
-    filename = output.name
+    filename = datetime.now().strftime(time_format) + '.json.gz'
     click.echo("Starting simulation with:")
     click.echo(dict(N=N, s=s, H=H, u=u, filename=filename))
     waiting_time, fixation_time, fixation, n = simulation(N, s, H, u)
     click.echo("Writing results to {}".format(filename))
-    json.dump(dict(
-            waiting_time=waiting_time,
-            fixation_time=fixation_time,
-            fixation=fixation,
-            n=n.tolist(),
-            N=N, 
-            s=s, 
-            H=H, 
-            u=u, 
-            filename=filename
-        ),
-        output,
-        sort_keys=True, indent=4, separators=(',', ': ')
-    )
+    with gzip.open(filename, 'wt') as output:
+        json.dump(dict(
+                waiting_time=waiting_time,
+                fixation_time=fixation_time,
+                fixation=fixation,
+                n=n.tolist(),
+                N=N, 
+                s=s, 
+                H=H, 
+                u=u, 
+                filename=filename
+            ),
+            output,
+            sort_keys=True, indent=4, separators=(',', ': ')
+        )
+
 
 if __name__ == '__main__':
     main()
