@@ -2,6 +2,7 @@ from datetime import datetime
 import gzip
 import json
 import click
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
 
 time_format = '%Y-%m-%d-%H-%M-%s'
@@ -67,29 +68,33 @@ def simulation(N, s, H, u):
 @click.option('--s', default=0.1, type=float, help='Selection coefficient')
 @click.option('--H', default=2, type=float, help='Advantage of double mutant')
 @click.option('--u', default=1e-5, type=float, help='Mutation rate')
-def main(n, s, h, u):
+@click.option('--reps', default=1, type=int, help='Number of repetitions')
+def main(n, s, h, u, reps):
     N = n
     H = h
-    filename = datetime.now().strftime(time_format) + '.json.gz'
-    click.echo("Starting simulation with:")
-    click.echo(dict(N=N, s=s, H=H, u=u, filename=filename))
-    waiting_time, fixation_time, fixation, n = simulation(N, s, H, u)
-    click.echo("Writing results to {}".format(filename))
-    with gzip.open(filename, 'wt') as output:
-        json.dump(dict(
-                waiting_time=waiting_time,
-                fixation_time=fixation_time,
-                fixation=fixation,
-                n=n.tolist(),
-                N=N, 
-                s=s, 
-                H=H, 
-                u=u, 
-                filename=filename
-            ),
-            output,
-            sort_keys=True, indent=4, separators=(',', ': ')
-        )
+    click.echo("Starting {} simulations with:".format(reps))
+    click.echo(dict(N=N, s=s, H=H, u=u))
+    with ProcessPoolExecutor() as executor:
+        futures = [executor.submit(simulation, N, s, H, u) for _ in range(reps)]
+    for fut in as_completed(futures):
+        filename = datetime.now().strftime(time_format) + '.json.gz'
+        waiting_time, fixation_time, fixation, n = fut.result()
+        click.echo("Writing results to {}".format(filename))
+        with gzip.open(filename, 'wt') as output:
+            json.dump(dict(
+                    waiting_time=waiting_time,
+                    fixation_time=fixation_time,
+                    fixation=fixation,
+                    n=n.tolist(),
+                    N=N, 
+                    s=s, 
+                    H=H, 
+                    u=u, 
+                    filename=filename
+                ),
+                output,
+                sort_keys=True, indent=4, separators=(',', ': ')
+            )
 
 
 if __name__ == '__main__':
