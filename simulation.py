@@ -1,4 +1,5 @@
 from datetime import datetime 
+from uuid import uuid4
 import gzip
 import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -66,7 +67,10 @@ def simulation(N, s, H, u):
     fixation = bool(n[-1][-1] > 0)
     n = np.array(n)
 
-    filename = datetime.now().strftime(time_format) + '.json.gz'
+    filename = '{}_{}.json.gz'.format(
+        datetime.now().strftime(time_format),
+        str(uuid4()).partition('-')[0]
+    )
     click.echo("Writing results to {}.".format(filename))
     with gzip.open(filename, 'wt') as output:
         json.dump(dict(
