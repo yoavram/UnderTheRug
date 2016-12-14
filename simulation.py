@@ -1,11 +1,14 @@
 from datetime import datetime 
 import gzip
 import json
-import click
 from concurrent.futures import ProcessPoolExecutor, as_completed
+
+import click
 import numpy as np
 
+
 time_format = '%Y-%m-%d-%H-%M-%s'
+
 
 def simulation(N, s, H, u):
     """Simulation a single appearance of double mutant and its extinction or fixation.
@@ -51,7 +54,7 @@ def simulation(N, s, H, u):
         p = E @ p
         p = p / p.sum()
         n.append(np.random.multinomial(N, p))
-    Tw = len(n) # appearance time
+    waiting_time = len(n) # appearance time
     
     # waiting for fixation (reach 50%) or extinction (reach 0%)
     while 0 < n[-1][-1] < (N*0.5):
@@ -59,8 +62,28 @@ def simulation(N, s, H, u):
         p = E @ p
         p = p / p.sum()
         n.append(np.random.multinomial(N, p))
-    Tfe = len(n) - Tw # fixation / extinction time
-    return Tw, Tfe, bool(n[-1][-1] > 0), np.array(n)
+    fixation_time = len(n) - waiting_time # fixation / extinction time
+    fixation = bool(n[-1][-1] > 0)
+    n = np.array(n)
+
+    filename = datetime.now().strftime(time_format) + '.json.gz'
+    click.echo("Writing results to {}.".format(filename))
+    with gzip.open(filename, 'wt') as output:
+        json.dump(dict(
+                waiting_time=waiting_time,
+                fixation_time=fixation_time,
+                fixation=fixation,
+                n=n.tolist(),
+                N=N, 
+                s=s, 
+                H=H, 
+                u=u, 
+                filename=filename
+            ),
+            output,
+            sort_keys=True, indent=4, separators=(',', ': ')
+        )
+    return True
 
 
 @click.command()
@@ -77,24 +100,9 @@ def main(n, s, h, u, reps):
     with ProcessPoolExecutor() as executor:
         futures = [executor.submit(simulation, N, s, H, u) for _ in range(reps)]
     for fut in as_completed(futures):
-        filename = datetime.now().strftime(time_format) + '.json.gz'
-        waiting_time, fixation_time, fixation, n = fut.result()
-        click.echo("Writing results to {}".format(filename))
-        with gzip.open(filename, 'wt') as output:
-            json.dump(dict(
-                    waiting_time=waiting_time,
-                    fixation_time=fixation_time,
-                    fixation=fixation,
-                    n=n.tolist(),
-                    N=N, 
-                    s=s, 
-                    H=H, 
-                    u=u, 
-                    filename=filename
-                ),
-                output,
-                sort_keys=True, indent=4, separators=(',', ': ')
-            )
+        if not fut.result():
+            click.echo("Simulation failed.")
+    click.echo("Finished.")
 
 
 if __name__ == '__main__':
