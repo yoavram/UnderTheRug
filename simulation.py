@@ -1,113 +1,191 @@
-from datetime import datetime 
-from uuid import uuid4
-import gzip
-import json
-from concurrent.futures import ProcessPoolExecutor, as_completed
-
-import click
 import numpy as np
+from scipy.stats import poisson
+from scipy.linalg import block_diag
 
+def mutation_free_population(strains, G):
+    p = np.array([ [0] * G for _ in range(strains) ], dtype=np.float64)
+    p[0,0] = 1
+    assert np.allclose(p.sum(), 1)
+    return p
 
-time_format = '%Y-%m-%d-%H-%M-%s'
+def smooth_fitness(s, H, strains, G):
+    w = np.array([ [ (1 - s ) ** (k + i) for k in range(G)] for i in range(strains) ])
+    return w
 
+def rugged_fitness(s, H, strains, G):
+    w = smooth_fitness(s, H, strains, G)
+    w[-1,:] *= (1 + s * H)/((1 - s) ** 2) # fix fitness of the double mutant strain
+    return w
 
-def simulation(N, s, H, u):
-    """Simulation a single appearance of double mutant and its extinction or fixation.
+def mean_fitness(p, w):
+    return (p*w).sum()
+
+def mutation_rates_matrix(U, pi, tau, w):
+    mutation_rates = np.ones(w.shape) * U
+    mutation_rates[w < pi] *= tau
+    return mutation_rates
+
+def big_mutation_matrix(mutation_rates, repeats, small_mutation_matrix_function):
+    assert mutation_rates.shape[0] == 3 or mutation_rates.shape[1] == 3
+    M = np.zeros((0,0))
+    for i in range(repeats):
+        m = small_mutation_matrix_function(mutation_rates[i,:])
+        M = block_diag(M, m)
+    assert np.allclose(M.sum(axis=0),1)
+    return M
+
+def small_background_mutation_matrix(mutation_rates):
+    assert mutation_rates.shape[0] == len(mutation_rates)	
+    mutation_rvs = poisson(mutation_rates)
+    m = np.diag(mutation_rvs.pmf(0))
+    for k in range(1,mutation_rates.shape[0]):
+        m += np.diag(mutation_rvs.pmf(k)[:-k],-k)
+    # absorb further mutations in the last class
+    for j in range(mutation_rates.shape[0]):
+        m[-1,j] = 1 - mutation_rvs.cdf(mutation_rates.shape[0] - 2 - j)[j]
+    return m
+
+def small_strain_mutation_matrix(mutation_rates):
+    assert mutation_rates.shape[0] == len(mutation_rates)
+    mu = mutation_rates
+    u = np.array([ [ (1 - mu[0]) ** 2, 0, 0 ], [2 * mu[0] * (1 - mu[0]) , 1 - mu[1], 0], [ mu[0] ** 2, mu[1], 1 ] ])
+    return u
+
+def run(pop_size, s, H, U, beta, G, pi, tau, tick_interval=1000000):
+    # init population
+    w = smooth_fitness(s, H, 3, G)
+    mutation_rates = mutation_rates_matrix(U, pi, tau, w)
+    Mm = big_mutation_matrix(mutation_rates, 3, small_background_mutation_matrix)
+    mutation_rates2 = mutation_rates.copy()
+    Mu = big_mutation_matrix((mutation_rates2 * beta).transpose(), G, small_strain_mutation_matrix)
+
+    p = mutation_free_population(3, G)
+    ps = [p]
+    shape = p.shape
+    W = mean_fitness(p,w)
+    Ws = [W]
     
-    Parameters
-    ----------
-    N : int
-        constant population size
-    s  : float
-        selection coefficient against aB and Ab, 0 < s < 1
-    H : float
-        ratio of selection coefficeints against aB/Ab and AB, 0 < H < 1
-    u : float
-        mutation rate, 0 < u < 1
-        
-    Returns
-    -------
-    Tw : int
-        time of first appearance of AB
-    Tfe : int
-        time for fixation or extinction of AB
-    fix : bool
-        if True, AB reached 50% (fixation), otherwise AB reached 0% (extinction)
-    n : numpy.ndarray
-        n[i,j] if the number of j genotypes at generation i
-    """
-    N = int(N)
-    # n[j][i] is counts of genotype i (ab, aB, Ab, AB) in generation j
-    n = [np.array([N, 0, 0, 0])]
+    tick = 0
+    print("Starting simulation")
 
-    S = np.diag([1, 1-s, 1-s, 1+s*H])
-    M = np.array([
-        [(1-u)**2, (1-u)*u, (1-u)*u, u**2],
-        [(1-u)*u, (1-u)**2, u**2, (1-u)*u],
-        [(1-u)*u, u**2, (1-u)**2, (1-u)*u],
-        [u**2, (1-u)*u, (1-u)*u, u**2]
-    ])
-    E = M @ S
+    ## MSB
+
+    while tick < 5000:
+        # selection
+        p = w * p
+
+        # strain mutations
+        p = Mu.dot( p.flatten(order="F") )
+        p = p.reshape(shape, order="F")
+
+        # background mutations 
+        p = Mm.dot( p.flatten(order="C") )
+        p = p.reshape(shape, order="C")
+
+        p /= p.sum()
+
+        # drift
+        if pop_size > 0:
+            p = np.random.multinomial(pop_size, p.flatten()) / np.float64(pop_size)
+            p = p.reshape(shape)
+
+        # mean fitness
+        W = mean_fitness(p,w)
+
+        # monitoring and logging
+
+        if tick_interval != 0 and tick % tick_interval == 0:
+            print("Tick %d" % tick)
+        tick += 1
+        ps.append(p)
+        Ws.append(W)
+
+    print("MSB reached at tick %d with mean fitness %.4g" % (tick, W))
     
-    # waiting for appearance
-    while n[-1][-1] == 0:
-        p = n[-1] / N
-        p = E @ p
-        p = p / p.sum()
-        n.append(np.random.multinomial(N, p))
-    waiting_time = len(n) # appearance time
-    
-    # waiting for fixation (reach 50%) or extinction (reach 0%)
-    while 0 < n[-1][-1] < (N*0.5):
-        p = n[-1] / N
-        p = E @ p
-        p = p / p.sum()
-        n.append(np.random.multinomial(N, p))
-    fixation_time = len(n) - waiting_time # fixation / extinction time
-    fixation = bool(n[-1][-1] > 0)
-    n = np.array(n)
+    w = rugged_fitness(s, H, 3, G)
+    mutation_rates = mutation_rates_matrix(U, pi, tau, w)
+    Mm = big_mutation_matrix(mutation_rates, 3, small_background_mutation_matrix)
+    mutation_rates2 = mutation_rates.copy()
+    Mu = big_mutation_matrix((mutation_rates2 * beta).transpose(), G, small_strain_mutation_matrix)
 
-    filename = '{}_{}.json.gz'.format(
-        datetime.now().strftime(time_format),
-        str(uuid4()).partition('-')[0]
-    )
-    click.echo("Writing results to {}.".format(filename))
-    with gzip.open(filename, 'wt') as output:
-        json.dump(dict(
-                waiting_time=waiting_time,
-                fixation_time=fixation_time,
-                fixation=fixation,
-                n=n.tolist(),
-                N=N, 
-                s=s, 
-                H=H, 
-                u=u, 
-                filename=filename
-            ),
-            output,
-            sort_keys=True, indent=4, separators=(',', ': ')
-        )
-    return True
+    ## Double mutant appearance
 
+    while p[2,:].sum() == 0:
+        # selection
+        p = w * p
 
-@click.command()
-@click.option('--N', default=1000, type=int, help='Population size')
-@click.option('--s', default=0.1, type=float, help='Selection coefficient')
-@click.option('--H', default=2, type=float, help='Advantage of double mutant')
-@click.option('--u', default=1e-5, type=float, help='Mutation rate')
-@click.option('--reps', default=1, type=int, help='Number of repetitions')
-def main(n, s, h, u, reps):
-    N = n
-    H = h
-    click.echo("Starting {} simulations with:".format(reps))
-    click.echo(dict(N=N, s=s, H=H, u=u))
-    with ProcessPoolExecutor() as executor:
-        futures = [executor.submit(simulation, N, s, H, u) for _ in range(reps)]
-    for fut in as_completed(futures):
-        if not fut.result():
-            click.echo("Simulation failed.")
-    click.echo("Finished.")
+        # strain mutations
+        p = Mu.dot( p.flatten(order="F") )
+        p = p.reshape(shape, order="F")
+
+        # background mutations 
+        p = Mm.dot( p.flatten(order="C") )
+        p = p.reshape(shape, order="C")
+
+        p /= p.sum()
+
+        # drift
+        if pop_size > 0:
+            p = np.random.multinomial(pop_size, p.flatten()) / np.float64(pop_size)
+            p = p.reshape(shape)
+
+        # mean fitness
+        W = mean_fitness(p,w)
+
+        # monitoring and logging
+
+        if tick_interval != 0 and tick % tick_interval == 0:
+            print("Tick %d" % tick)
+        tick += 1
+        ps.append(p)
+        Ws.append(W)
+
+    print("Double mutant appeared at tick %d with mean fitness %.4g" % (tick, W))
+    AB0,AB1,AB2,AB3 = p[2,0],p[2,1],p[2,2],p[2,3]
+    print("AB/0 %.4g, AB/1 %.4g, AB/2 %.4g, AB/3 %.4g" % (AB0, AB1, AB2, AB3))
 
 
-if __name__ == '__main__':
-    main()
+    ## Double mutant fixation
+
+    while p[2,:].sum() > 0 and p[2,:].sum() < 1:
+        # selection
+        p = w * p
+
+        # NO strain mutations
+        # p = Mu.dot( p.flatten(order="F") )
+        # p = p.reshape(shape, order="F")
+
+        # background mutations 
+        p = Mm.dot( p.flatten(order="C") )
+        p = p.reshape(shape, order="C")
+
+        p /= p.sum()
+
+        # drift
+        if pop_size > 0:
+            p = np.random.multinomial(pop_size, p.flatten()) / np.float64(pop_size)
+            p = p.reshape(shape)
+
+        # mean fitness
+        W = mean_fitness(p,w)
+
+        # monitoring and logging
+
+        if tick_interval != 0 and tick % tick_interval == 0:
+            print("Tick %d" % tick)
+        tick += 1
+        ps.append(p)
+        Ws.append(W)
+
+
+    if bool(p[2,:].sum() > 0):
+        print("Fixation at tick %d with mean fitness %.4g and AB frequency %.4g" % (tick, W, p[2,:].sum()))
+        AB0,AB1,AB2,AB3 = p[2,0],p[2,1],p[2,2],p[2,3]
+        print("AB/0 %.4g, AB/1 %.4g, AB/2 %.4g, AB/3 %.4g" % (AB0, AB1, AB2, AB3))
+    else:
+        print("Extinction at tick %d with mean fitness %.4g" % (tick, W))
+
+    # wrap up 
+    print("Simulation finished, %d ticks" % tick)
+
+    return np.array(ps), np.array(Ws)
