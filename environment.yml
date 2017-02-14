@@ -1,4 +1,4 @@
-name: EvolRugAdaptLand2016
+name: UnderTheRug
 dependencies:
 - cython
 - ipykernel
@@ -6,7 +6,7 @@ dependencies:
 - numpy
 - pandas>=0.18
 - pip
-- python=3.5
+- python>=3.5
 - scipy
 - seaborn
 - click
