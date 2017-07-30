@@ -6,6 +6,8 @@ This repository contains supporting material for
 
 >   Obolski, Ram & Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, In preparation.
 
+See preprint on [bioRxiv](http://biorxiv.org/content/early/2017/03/03/112177).
+
 The notebook files (`.ipynb`) include Python source code for reproduction of Figures 2, 3, 5, and 6.
 
 ## View the notebooks
