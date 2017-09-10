@@ -4,7 +4,7 @@
 
 This repository contains supporting material for
 
->   Obolski, Ram & Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, In preparation.
+>   Obolski, Ram & Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, In review.
 
 See preprint on [bioRxiv](http://biorxiv.org/content/early/2017/03/03/112177).
 
@@ -33,6 +33,15 @@ You can interacte with the notebooks on your own machine.
 ### Install dependencies
 
 The easiest way to install the dependencies is to install [Anaconda](https://store.continuum.io/).
+You should use Python 3, preferably with version 3.5 or higher.
+The notebooks will probably not work on Python 2.
+
+All required packages should then be available.
+However, if you get an `ImportError` due to a package not being installed, the following command will install all requirements using conda:
+
+```sh
+conda install jupyter notebook cython ipykernel matplotlib numpy pandas scipy seaborn
+```
 
 ### Get the source code repository
 
