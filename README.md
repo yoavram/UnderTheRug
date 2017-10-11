@@ -4,7 +4,7 @@
 
 This repository contains supporting material for
 
->   Obolski, Ram & Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, In review.
+>   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, Accepted.
 
 See preprint on [bioRxiv](http://biorxiv.org/content/early/2017/03/03/112177).
 
