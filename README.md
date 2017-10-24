@@ -4,9 +4,7 @@
 
 This repository contains supporting material for
 
->   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2017) _Evolution on rugged adaptive landscapes_, Reports on Progress in Physics, Accepted.
-
-See preprint on [bioRxiv](http://biorxiv.org/content/early/2017/03/03/112177).
+>   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2017) _[Evolution on rugged adaptive landscapes](http://iopscience.iop.org/10.1088/1361-6633/aa94d4)_, Reports on Progress in Physics, Accepted. [Preprint available](https://www.biorxiv.org/content/early/2017/03/03/112177).
 
 The notebook files (`.ipynb`) include Python source code for reproduction of Figures 2, 3, 5, and 6.
 
