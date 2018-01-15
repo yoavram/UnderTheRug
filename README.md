@@ -1,12 +1,12 @@
 # Evolution on rugged adaptive landscapes
-## Obolski, Ram & Hadany
-## Key Issues Review for Reports on Progress in Physics, 2017
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/yoavram/UnderTheRug/master)
 
 This repository contains supporting material for
 
->   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2017) _[Evolution on rugged adaptive landscapes](http://iopscience.iop.org/article/10.1088/1361-6633/aa94d4)_, Reports on Progress in Physics, In print. [Preprint available](https://www.biorxiv.org/content/early/2017/03/03/112177).
+>   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2018) _[Key issues review: evolution on rugged adaptive landscapes](http://iopscience.iop.org/article/10.1088/1361-6633/aa94d4)_, Reports on Progress in Physics, 81: 12602. 
+
+A preprint is available on [bioRxiv](https://www.biorxiv.org/content/early/2017/03/03/112177).
 
 The notebook files (`.ipynb`) include Python source code for reproduction of Figures 2, 3, 5, and 6.
 
@@ -30,7 +30,8 @@ Interact with the notebooks on [binder](https://mybinder.org/v2/gh/yoavram/Under
 
 ## Run the notebook
 
-You can interacte with the notebooks on your own machine.
+You can interact with the notebooks on [binder](https://mybinder.org/v2/gh/yoavram/UnderTheRug/master) or on your own machine.
+Following are instructions for the latter.
 
 ### Install dependencies
 
