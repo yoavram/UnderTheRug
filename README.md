@@ -2,6 +2,8 @@
 ## Obolski, Ram & Hadany
 ## Key Issues Review for Reports on Progress in Physics, 2017
 
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/yoavram/UnderTheRug/master)
+
 This repository contains supporting material for
 
 >   Obolski<sup>eq</sup>, Ram<sup>eq</sup>, and Hadany (2017) _[Evolution on rugged adaptive landscapes](http://iopscience.iop.org/article/10.1088/1361-6633/aa94d4)_, Reports on Progress in Physics, In print. [Preprint available](https://www.biorxiv.org/content/early/2017/03/03/112177).
