@@ -12,6 +12,8 @@ The notebook files (`.ipynb`) include Python source code for reproduction of Fig
 
 ## View the notebooks
 
+Interact with the notebooks on [binder](https://mybinder.org/v2/gh/yoavram/UnderTheRug/master).
+
 - [nk_model.ipynb](https://github.com/yoavram/UnderTheRug/blob/master/nk_model.ipynb)
   - Contains source code to generate random landscapes from an _NK model_ and visualize their ruggedness to produce Figure 2.
 - [holey_landscape.ipynb](https://github.com/yoavram/UnderTheRug/blob/master/holey_landscape.ipynb)
