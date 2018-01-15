@@ -1,4 +1,6 @@
 name: UnderTheRug
+channels:
+- conda-forge
 dependencies:
 - cython
 - ipykernel
